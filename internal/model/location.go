@@ -3,20 +3,20 @@ package model
 import "time"
 
 type LocationUpdate struct {
-	DriverID  string  `json:"driver_id" validate:"required"`
+	RefID     string  `json:"ref_id" validate:"required"`
 	Latitude  float64 `json:"latitude" validate:"required"`
 	Longitude float64 `json:"longitude" validate:"required"`
 }
 
-type DriverLocation struct {
-	DriverID  string    `json:"driver_id"`
+type TrackedEntity struct {
+	RefID     string    `json:"ref_id"`
 	Latitude  float64   `json:"latitude"`
 	Longitude float64   `json:"longitude"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-type NearbyDriver struct {
-	DriverID  string  `json:"driver_id"`
+type NearbyEntity struct {
+	RefID     string  `json:"ref_id"`
 	Latitude  float64 `json:"latitude"`
 	Longitude float64 `json:"longitude"`
 	Distance  float64 `json:"distance_km"`

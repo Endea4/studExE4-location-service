@@ -17,8 +17,8 @@ import (
 
 // @title StudEx Location Service API
 // @version 1.0
-// @description Real-time driver GPS tracking service with Redis geo indexing.
-// @description Handles high-frequency location updates (2-5 sec intervals) from driver apps.
+// @description Real-time GPS tracking service with Redis geo indexing.
+// @description Generic entity tracking — accepts any ref_id (driver, rider, courier, etc).
 // @host localhost:8083
 // @BasePath /
 // @schemes http https
@@ -66,8 +66,8 @@ func main() {
 		r.Post("/", locHandler.UpdateLocation)
 		r.Get("/", locHandler.GetAllLocations)
 		r.Get("/nearby", locHandler.FindNearby)
-		r.Get("/{driver_id}", locHandler.GetLocation)
-		r.Delete("/{driver_id}", locHandler.RemoveDriver)
+		r.Get("/{ref_id}", locHandler.GetLocation)
+		r.Delete("/{ref_id}", locHandler.RemoveEntity)
 	})
 
 	addr := ":" + port

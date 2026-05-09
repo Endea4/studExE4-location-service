@@ -29,8 +29,8 @@ func writeError(w http.ResponseWriter, status int, msg string) {
 }
 
 // UpdateLocation godoc
-// @Summary Update driver location
-// @Description Update a driver's current GPS position. Called every 2-5 seconds by the driver app.
+// @Summary Update entity location
+// @Description Update an entity's current GPS position. Called every 2-5 seconds by clients.
 // @Tags location
 // @Accept json
 // @Produce json
@@ -45,8 +45,8 @@ func (h *LocationHandler) UpdateLocation(w http.ResponseWriter, r *http.Request)
 		writeError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
-	if req.DriverID == "" {
-		writeError(w, http.StatusBadRequest, "driver_id is required")
+	if req.RefID == "" {
+		writeError(w, http.StatusBadRequest, "ref_id is required")
 		return
 	}
 	if req.Latitude < -90 || req.Latitude > 90 {
@@ -64,35 +64,35 @@ func (h *LocationHandler) UpdateLocation(w http.ResponseWriter, r *http.Request)
 	}
 
 	writeJSON(w, http.StatusOK, map[string]string{
-		"status":    "ok",
-		"driver_id": req.DriverID,
+		"status": "ok",
+		"ref_id": req.RefID,
 	})
 }
 
 // GetLocation godoc
-// @Summary Get driver location
-// @Description Get a driver's current GPS position
+// @Summary Get entity location
+// @Description Get an entity's current GPS position
 // @Tags location
 // @Produce json
-// @Param driver_id path string true "Driver ID"
-// @Success 200 {object} model.DriverLocation
+// @Param ref_id path string true "Reference ID"
+// @Success 200 {object} model.TrackedEntity
 // @Failure 404 {object} model.ErrorResponse
 // @Failure 500 {object} model.ErrorResponse
-// @Router /location/{driver_id} [get]
+// @Router /location/{ref_id} [get]
 func (h *LocationHandler) GetLocation(w http.ResponseWriter, r *http.Request) {
-	driverID := chi.URLParam(r, "driver_id")
-	if driverID == "" {
-		writeError(w, http.StatusBadRequest, "driver_id is required")
+	refID := chi.URLParam(r, "ref_id")
+	if refID == "" {
+		writeError(w, http.StatusBadRequest, "ref_id is required")
 		return
 	}
 
-	loc, err := h.repo.GetLocation(r.Context(), driverID)
+	loc, err := h.repo.GetLocation(r.Context(), refID)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "failed to get location")
 		return
 	}
 	if loc == nil {
-		writeError(w, http.StatusNotFound, "driver location not found")
+		writeError(w, http.StatusNotFound, "entity location not found")
 		return
 	}
 
@@ -100,14 +100,14 @@ func (h *LocationHandler) GetLocation(w http.ResponseWriter, r *http.Request) {
 }
 
 // FindNearby godoc
-// @Summary Find nearby drivers
-// @Description Find all drivers within a given radius of a point
+// @Summary Find nearby entities
+// @Description Find all entities within a given radius of a point
 // @Tags location
 // @Produce json
 // @Param lat query number true "Latitude"
 // @Param lng query number true "Longitude"
 // @Param radius query number false "Radius in km" default(5)
-// @Success 200 {array} model.NearbyDriver
+// @Success 200 {array} model.NearbyEntity
 // @Failure 400 {object} model.ErrorResponse
 // @Failure 500 {object} model.ErrorResponse
 // @Router /location/nearby [get]
@@ -141,28 +141,28 @@ func (h *LocationHandler) FindNearby(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	drivers, err := h.repo.FindNearby(r.Context(), &model.NearbyQuery{
+	entities, err := h.repo.FindNearby(r.Context(), &model.NearbyQuery{
 		Latitude:  lat,
 		Longitude: lng,
 		RadiusKm:  radius,
 	})
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "failed to search nearby drivers")
+		writeError(w, http.StatusInternalServerError, "failed to search nearby")
 		return
 	}
 
-	if drivers == nil {
-		drivers = []model.NearbyDriver{}
+	if entities == nil {
+		entities = []model.NearbyEntity{}
 	}
-	writeJSON(w, http.StatusOK, drivers)
+	writeJSON(w, http.StatusOK, entities)
 }
 
 // GetAllLocations godoc
-// @Summary Get all driver locations
-// @Description Get current positions of all drivers with active locations
+// @Summary Get all tracked locations
+// @Description Get current positions of all tracked entities
 // @Tags location
 // @Produce json
-// @Success 200 {array} model.DriverLocation
+// @Success 200 {array} model.TrackedEntity
 // @Failure 500 {object} model.ErrorResponse
 // @Router /location [get]
 func (h *LocationHandler) GetAllLocations(w http.ResponseWriter, r *http.Request) {
@@ -172,34 +172,34 @@ func (h *LocationHandler) GetAllLocations(w http.ResponseWriter, r *http.Request
 		return
 	}
 	if locations == nil {
-		locations = []model.DriverLocation{}
+		locations = []model.TrackedEntity{}
 	}
 	writeJSON(w, http.StatusOK, locations)
 }
 
-// RemoveDriver godoc
-// @Summary Remove driver location
-// @Description Remove a driver's location from the tracking system
+// RemoveEntity godoc
+// @Summary Remove entity location
+// @Description Remove an entity's location from the tracking system
 // @Tags location
 // @Produce json
-// @Param driver_id path string true "Driver ID"
+// @Param ref_id path string true "Reference ID"
 // @Success 200 {object} map[string]string
 // @Failure 500 {object} model.ErrorResponse
-// @Router /location/{driver_id} [delete]
-func (h *LocationHandler) RemoveDriver(w http.ResponseWriter, r *http.Request) {
-	driverID := chi.URLParam(r, "driver_id")
-	if driverID == "" {
-		writeError(w, http.StatusBadRequest, "driver_id is required")
+// @Router /location/{ref_id} [delete]
+func (h *LocationHandler) RemoveEntity(w http.ResponseWriter, r *http.Request) {
+	refID := chi.URLParam(r, "ref_id")
+	if refID == "" {
+		writeError(w, http.StatusBadRequest, "ref_id is required")
 		return
 	}
 
-	if err := h.repo.RemoveDriver(r.Context(), driverID); err != nil {
-		writeError(w, http.StatusInternalServerError, "failed to remove driver")
+	if err := h.repo.RemoveEntity(r.Context(), refID); err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to remove entity")
 		return
 	}
 
 	writeJSON(w, http.StatusOK, map[string]string{
-		"status":    "removed",
-		"driver_id": driverID,
+		"status": "removed",
+		"ref_id": refID,
 	})
 }

@@ -1,16 +1,5 @@
 basePath: /
 definitions:
-  model.DriverLocation:
-    properties:
-      driver_id:
-        type: string
-      latitude:
-        type: number
-      longitude:
-        type: number
-      updated_at:
-        type: string
-    type: object
   model.ErrorResponse:
     properties:
       code:
@@ -22,40 +11,51 @@ definitions:
     type: object
   model.LocationUpdate:
     properties:
-      driver_id:
-        type: string
       latitude:
         type: number
       longitude:
         type: number
+      ref_id:
+        type: string
     required:
-    - driver_id
     - latitude
     - longitude
+    - ref_id
     type: object
-  model.NearbyDriver:
+  model.NearbyEntity:
     properties:
       distance_km:
         type: number
-      driver_id:
-        type: string
       latitude:
         type: number
       longitude:
         type: number
+      ref_id:
+        type: string
+    type: object
+  model.TrackedEntity:
+    properties:
+      latitude:
+        type: number
+      longitude:
+        type: number
+      ref_id:
+        type: string
+      updated_at:
+        type: string
     type: object
 host: localhost:8083
 info:
   contact: {}
   description: |-
-    Real-time driver GPS tracking service with Redis geo indexing.
-    Handles high-frequency location updates (2-5 sec intervals) from driver apps.
+    Real-time GPS tracking service with Redis geo indexing.
+    Generic entity tracking — accepts any ref_id (driver, rider, courier, etc).
   title: StudEx Location Service API
   version: "1.0"
 paths:
   /location:
     get:
-      description: Get current positions of all drivers with active locations
+      description: Get current positions of all tracked entities
       produces:
       - application/json
       responses:
@@ -63,20 +63,20 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/model.DriverLocation'
+              $ref: '#/definitions/model.TrackedEntity'
             type: array
         "500":
           description: Internal Server Error
           schema:
             $ref: '#/definitions/model.ErrorResponse'
-      summary: Get all driver locations
+      summary: Get all tracked locations
       tags:
       - location
     post:
       consumes:
       - application/json
-      description: Update a driver's current GPS position. Called every 2-5 seconds
-        by the driver app.
+      description: Update an entity's current GPS position. Called every 2-5 seconds
+        by clients.
       parameters:
       - description: Location data
         in: body
@@ -101,16 +101,16 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/model.ErrorResponse'
-      summary: Update driver location
+      summary: Update entity location
       tags:
       - location
-  /location/{driver_id}:
+  /location/{ref_id}:
     delete:
-      description: Remove a driver's location from the tracking system
+      description: Remove an entity's location from the tracking system
       parameters:
-      - description: Driver ID
+      - description: Reference ID
         in: path
-        name: driver_id
+        name: ref_id
         required: true
         type: string
       produces:
@@ -126,15 +126,15 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/model.ErrorResponse'
-      summary: Remove driver location
+      summary: Remove entity location
       tags:
       - location
     get:
-      description: Get a driver's current GPS position
+      description: Get an entity's current GPS position
       parameters:
-      - description: Driver ID
+      - description: Reference ID
         in: path
-        name: driver_id
+        name: ref_id
         required: true
         type: string
       produces:
@@ -143,7 +143,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.DriverLocation'
+            $ref: '#/definitions/model.TrackedEntity'
         "404":
           description: Not Found
           schema:
@@ -152,12 +152,12 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/model.ErrorResponse'
-      summary: Get driver location
+      summary: Get entity location
       tags:
       - location
   /location/nearby:
     get:
-      description: Find all drivers within a given radius of a point
+      description: Find all entities within a given radius of a point
       parameters:
       - description: Latitude
         in: query
@@ -181,7 +181,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/model.NearbyDriver'
+              $ref: '#/definitions/model.NearbyEntity'
             type: array
         "400":
           description: Bad Request
@@ -191,7 +191,7 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/model.ErrorResponse'
-      summary: Find nearby drivers
+      summary: Find nearby entities
       tags:
       - location
 schemes:

@@ -17,21 +17,21 @@ const docTemplate = `{
     "paths": {
         "/location": {
             "get": {
-                "description": "Get current positions of all drivers with active locations",
+                "description": "Get current positions of all tracked entities",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "location"
                 ],
-                "summary": "Get all driver locations",
+                "summary": "Get all tracked locations",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/model.DriverLocation"
+                                "$ref": "#/definitions/model.TrackedEntity"
                             }
                         }
                     },
@@ -44,7 +44,7 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "description": "Update a driver's current GPS position. Called every 2-5 seconds by the driver app.",
+                "description": "Update an entity's current GPS position. Called every 2-5 seconds by clients.",
                 "consumes": [
                     "application/json"
                 ],
@@ -54,7 +54,7 @@ const docTemplate = `{
                 "tags": [
                     "location"
                 ],
-                "summary": "Update driver location",
+                "summary": "Update entity location",
                 "parameters": [
                     {
                         "description": "Location data",
@@ -93,14 +93,14 @@ const docTemplate = `{
         },
         "/location/nearby": {
             "get": {
-                "description": "Find all drivers within a given radius of a point",
+                "description": "Find all entities within a given radius of a point",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "location"
                 ],
-                "summary": "Find nearby drivers",
+                "summary": "Find nearby entities",
                 "parameters": [
                     {
                         "type": "number",
@@ -130,7 +130,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/model.NearbyDriver"
+                                "$ref": "#/definitions/model.NearbyEntity"
                             }
                         }
                     },
@@ -149,21 +149,21 @@ const docTemplate = `{
                 }
             }
         },
-        "/location/{driver_id}": {
+        "/location/{ref_id}": {
             "get": {
-                "description": "Get a driver's current GPS position",
+                "description": "Get an entity's current GPS position",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "location"
                 ],
-                "summary": "Get driver location",
+                "summary": "Get entity location",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Driver ID",
-                        "name": "driver_id",
+                        "description": "Reference ID",
+                        "name": "ref_id",
                         "in": "path",
                         "required": true
                     }
@@ -172,7 +172,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.DriverLocation"
+                            "$ref": "#/definitions/model.TrackedEntity"
                         }
                     },
                     "404": {
@@ -190,19 +190,19 @@ const docTemplate = `{
                 }
             },
             "delete": {
-                "description": "Remove a driver's location from the tracking system",
+                "description": "Remove an entity's location from the tracking system",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "location"
                 ],
-                "summary": "Remove driver location",
+                "summary": "Remove entity location",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Driver ID",
-                        "name": "driver_id",
+                        "description": "Reference ID",
+                        "name": "ref_id",
                         "in": "path",
                         "required": true
                     }
@@ -228,23 +228,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "model.DriverLocation": {
-            "type": "object",
-            "properties": {
-                "driver_id": {
-                    "type": "string"
-                },
-                "latitude": {
-                    "type": "number"
-                },
-                "longitude": {
-                    "type": "number"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
         "model.ErrorResponse": {
             "type": "object",
             "properties": {
@@ -262,36 +245,53 @@ const docTemplate = `{
         "model.LocationUpdate": {
             "type": "object",
             "required": [
-                "driver_id",
                 "latitude",
-                "longitude"
+                "longitude",
+                "ref_id"
             ],
             "properties": {
-                "driver_id": {
-                    "type": "string"
-                },
                 "latitude": {
                     "type": "number"
                 },
                 "longitude": {
                     "type": "number"
+                },
+                "ref_id": {
+                    "type": "string"
                 }
             }
         },
-        "model.NearbyDriver": {
+        "model.NearbyEntity": {
             "type": "object",
             "properties": {
                 "distance_km": {
                     "type": "number"
                 },
-                "driver_id": {
-                    "type": "string"
-                },
                 "latitude": {
                     "type": "number"
                 },
                 "longitude": {
                     "type": "number"
+                },
+                "ref_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.TrackedEntity": {
+            "type": "object",
+            "properties": {
+                "latitude": {
+                    "type": "number"
+                },
+                "longitude": {
+                    "type": "number"
+                },
+                "ref_id": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
                 }
             }
         }
@@ -305,7 +305,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/",
 	Schemes:          []string{"http", "https"},
 	Title:            "StudEx Location Service API",
-	Description:      "Real-time driver GPS tracking service with Redis geo indexing.\nHandles high-frequency location updates (2-5 sec intervals) from driver apps.",
+	Description:      "Real-time GPS tracking service with Redis geo indexing.\nGeneric entity tracking — accepts any ref_id (driver, rider, courier, etc).",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",
