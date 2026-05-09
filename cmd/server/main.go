@@ -62,6 +62,8 @@ func main() {
 		httpSwagger.URL("/swagger/doc.json"),
 	))
 
+	r.Get("/dashboard", handler.MapDashboard)
+
 	r.Route("/location", func(r chi.Router) {
 		r.Post("/", locHandler.UpdateLocation)
 		r.Get("/", locHandler.GetAllLocations)
