@@ -1,0 +1,200 @@
+basePath: /
+definitions:
+  model.DriverLocation:
+    properties:
+      driver_id:
+        type: string
+      latitude:
+        type: number
+      longitude:
+        type: number
+      updated_at:
+        type: string
+    type: object
+  model.ErrorResponse:
+    properties:
+      code:
+        type: integer
+      detail:
+        type: string
+      error:
+        type: string
+    type: object
+  model.LocationUpdate:
+    properties:
+      driver_id:
+        type: string
+      latitude:
+        type: number
+      longitude:
+        type: number
+    required:
+    - driver_id
+    - latitude
+    - longitude
+    type: object
+  model.NearbyDriver:
+    properties:
+      distance_km:
+        type: number
+      driver_id:
+        type: string
+      latitude:
+        type: number
+      longitude:
+        type: number
+    type: object
+host: localhost:8083
+info:
+  contact: {}
+  description: |-
+    Real-time driver GPS tracking service with Redis geo indexing.
+    Handles high-frequency location updates (2-5 sec intervals) from driver apps.
+  title: StudEx Location Service API
+  version: "1.0"
+paths:
+  /location:
+    get:
+      description: Get current positions of all drivers with active locations
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.DriverLocation'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      summary: Get all driver locations
+      tags:
+      - location
+    post:
+      consumes:
+      - application/json
+      description: Update a driver's current GPS position. Called every 2-5 seconds
+        by the driver app.
+      parameters:
+      - description: Location data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.LocationUpdate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      summary: Update driver location
+      tags:
+      - location
+  /location/{driver_id}:
+    delete:
+      description: Remove a driver's location from the tracking system
+      parameters:
+      - description: Driver ID
+        in: path
+        name: driver_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      summary: Remove driver location
+      tags:
+      - location
+    get:
+      description: Get a driver's current GPS position
+      parameters:
+      - description: Driver ID
+        in: path
+        name: driver_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.DriverLocation'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      summary: Get driver location
+      tags:
+      - location
+  /location/nearby:
+    get:
+      description: Find all drivers within a given radius of a point
+      parameters:
+      - description: Latitude
+        in: query
+        name: lat
+        required: true
+        type: number
+      - description: Longitude
+        in: query
+        name: lng
+        required: true
+        type: number
+      - default: 5
+        description: Radius in km
+        in: query
+        name: radius
+        type: number
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.NearbyDriver'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      summary: Find nearby drivers
+      tags:
+      - location
+schemes:
+- http
+- https
+swagger: "2.0"

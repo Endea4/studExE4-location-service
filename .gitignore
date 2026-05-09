@@ -1,0 +1,28 @@
+# Binaries
+*.exe
+*.dll
+*.so
+*.dylib
+app
+location-service
+
+# Test
+*.test
+*.out
+coverage.*
+
+# Vendor
+vendor/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Env
+.env
+
+# OS
+.DS_Store
+Thumbs.db
