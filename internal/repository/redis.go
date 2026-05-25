@@ -2,11 +2,13 @@ package repository
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"time"
 
 	"github.com/Endea4/studExE4-location-service/internal/model"
+	"github.com/user/studexe4/shared/events"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -28,6 +30,15 @@ func (r *LocationRepository) UpdateLocation(ctx context.Context, loc *model.Loca
 		Latitude:  loc.Latitude,
 	})
 	pipe.Set(ctx, fmt.Sprintf("entity:loc:%s", loc.RefID), time.Now().UnixMilli(), 0)
+
+	evtData, _ := json.Marshal(events.LocationUpdatedData{
+		RefID:     loc.RefID,
+		Latitude:  loc.Latitude,
+		Longitude: loc.Longitude,
+		Timestamp: time.Now().UnixMilli(),
+	})
+	pipe.Publish(ctx, events.RedisChannelLocationUpdates, evtData)
+
 	_, err := pipe.Exec(ctx)
 	return err
 }
