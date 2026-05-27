@@ -13,6 +13,7 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/redis/go-redis/v9"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
+	"github.com/joho/godotenv"
 )
 
 // @title StudEx Location Service API
@@ -23,6 +24,7 @@ import (
 // @BasePath /
 // @schemes http https
 func main() {
+	godotenv.Load()
 	port := getEnv("PORT", "8083")
 	redisAddr := getEnv("REDIS_ADDR", "localhost:6379")
 	redisPass := getEnv("REDIS_PASSWORD", "")

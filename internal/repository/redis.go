@@ -128,11 +128,13 @@ func (r *LocationRepository) GetAllLocations(ctx context.Context) ([]model.Track
 			} else {
 				updatedAt = time.Now()
 			}
+			gpsActive, _ := r.GetGpsActive(ctx, name)
 			locations = append(locations, model.TrackedEntity{
 				RefID:     name,
 				Latitude:  positions[i].Latitude,
 				Longitude: positions[i].Longitude,
 				UpdatedAt: updatedAt,
+				GpsActive: gpsActive,
 			})
 		}
 	}
@@ -144,7 +146,15 @@ func (r *LocationRepository) SetGpsActive(ctx context.Context, refID string, act
 	if active {
 		val = "1"
 	}
-	return r.rdb.Set(ctx, fmt.Sprintf("entity:gps:%s", refID), val, 0).Err()
+	pipe := r.rdb.Pipeline()
+	pipe.Set(ctx, fmt.Sprintf("entity:gps:%s", refID), val, 0)
+	evtData, _ := json.Marshal(events.GpsStatusData{
+		RefID:     refID,
+		GpsActive: active,
+	})
+	pipe.Publish(ctx, events.RedisChannelGpsStatus, evtData)
+	_, err := pipe.Exec(ctx)
+	return err
 }
 
 func (r *LocationRepository) GetGpsActive(ctx context.Context, refID string) (bool, error) {
