@@ -13,6 +13,7 @@ type TrackedEntity struct {
 	Latitude  float64   `json:"latitude"`
 	Longitude float64   `json:"longitude"`
 	UpdatedAt time.Time `json:"updated_at"`
+	GpsActive bool      `json:"gps_active"`
 }
 
 type NearbyEntity struct {

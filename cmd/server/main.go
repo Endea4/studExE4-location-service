@@ -64,13 +64,15 @@ func main() {
 
 	r.Get("/dashboard", handler.MapDashboard)
 
-	r.Route("/location", func(r chi.Router) {
-		r.Post("/", locHandler.UpdateLocation)
-		r.Get("/", locHandler.GetAllLocations)
-		r.Get("/nearby", locHandler.FindNearby)
-		r.Get("/{ref_id}", locHandler.GetLocation)
-		r.Delete("/{ref_id}", locHandler.RemoveEntity)
-	})
+		r.Route("/location", func(r chi.Router) {
+			r.Post("/", locHandler.UpdateLocation)
+			r.Get("/", locHandler.GetAllLocations)
+			r.Get("/nearby", locHandler.FindNearby)
+			r.Get("/{ref_id}/gps-status", locHandler.GetGpsStatus)
+			r.Put("/{ref_id}/gps-status", locHandler.SetGpsStatus)
+			r.Get("/{ref_id}", locHandler.GetLocation)
+			r.Delete("/{ref_id}", locHandler.RemoveEntity)
+		})
 
 	addr := ":" + port
 	fmt.Printf("Location Service running on %s\n", addr)

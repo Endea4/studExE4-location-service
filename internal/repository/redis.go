@@ -61,11 +61,18 @@ func (r *LocationRepository) GetLocation(ctx context.Context, refID string) (*mo
 		updatedAt = time.Now()
 	}
 
+	gpsActive := false
+	ga, _ := r.GetGpsActive(ctx, refID)
+	if ga {
+		gpsActive = true
+	}
+
 	return &model.TrackedEntity{
 		RefID:     refID,
 		Latitude:  results[0].Latitude,
 		Longitude: results[0].Longitude,
 		UpdatedAt: updatedAt,
+		GpsActive: gpsActive,
 	}, nil
 }
 
@@ -130,6 +137,25 @@ func (r *LocationRepository) GetAllLocations(ctx context.Context) ([]model.Track
 		}
 	}
 	return locations, nil
+}
+
+func (r *LocationRepository) SetGpsActive(ctx context.Context, refID string, active bool) error {
+	val := "0"
+	if active {
+		val = "1"
+	}
+	return r.rdb.Set(ctx, fmt.Sprintf("entity:gps:%s", refID), val, 0).Err()
+}
+
+func (r *LocationRepository) GetGpsActive(ctx context.Context, refID string) (bool, error) {
+	val, err := r.rdb.Get(ctx, fmt.Sprintf("entity:gps:%s", refID)).Result()
+	if err == redis.Nil {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	return val == "1", nil
 }
 
 func (r *LocationRepository) RemoveEntity(ctx context.Context, refID string) error {

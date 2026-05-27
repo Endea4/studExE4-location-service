@@ -177,6 +177,46 @@ func (h *LocationHandler) GetAllLocations(w http.ResponseWriter, r *http.Request
 	writeJSON(w, http.StatusOK, locations)
 }
 
+func (h *LocationHandler) SetGpsStatus(w http.ResponseWriter, r *http.Request) {
+	refID := chi.URLParam(r, "ref_id")
+	if refID == "" {
+		writeError(w, http.StatusBadRequest, "ref_id is required")
+		return
+	}
+	var req struct {
+		GpsActive bool `json:"gps_active"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+	if err := h.repo.SetGpsActive(r.Context(), refID, req.GpsActive); err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to update gps status")
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"ref_id":     refID,
+		"gps_active": req.GpsActive,
+	})
+}
+
+func (h *LocationHandler) GetGpsStatus(w http.ResponseWriter, r *http.Request) {
+	refID := chi.URLParam(r, "ref_id")
+	if refID == "" {
+		writeError(w, http.StatusBadRequest, "ref_id is required")
+		return
+	}
+	active, err := h.repo.GetGpsActive(r.Context(), refID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to get gps status")
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"ref_id":     refID,
+		"gps_active": active,
+	})
+}
+
 // RemoveEntity godoc
 // @Summary Remove entity location
 // @Description Remove an entity's location from the tracking system
