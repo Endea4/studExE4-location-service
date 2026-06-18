@@ -1,0 +1,15 @@
+services:
+  location-service:
+    build: .
+    container_name: studexe4-location-service
+    ports:
+      - "9083:9083"
+    env_file:
+      - .env.example
+    networks:
+      - studex-net
+    restart: unless-stopped
+
+networks:
+  studex-net:
+    driver: bridge
