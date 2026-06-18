@@ -3,7 +3,7 @@ module github.com/Endea4/studExE4-location-service
 go 1.25.0
 
 require (
-	github.com/Endea4/studExE4-shared v0.0.0-00010101000000-000000000000
+	github.com/Endea4/studExE4-shared v1.0.0
 	github.com/go-chi/chi/v5 v5.2.1
 	github.com/go-chi/cors v1.2.1
 	github.com/joho/godotenv v1.5.1
@@ -54,5 +54,3 @@ require (
 	golang.org/x/tools v0.26.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
-
-replace github.com/Endea4/studExE4-shared => ../studExE4-shared
