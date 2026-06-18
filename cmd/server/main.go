@@ -25,7 +25,7 @@ import (
 // @schemes http https
 func main() {
 	godotenv.Load()
-	port := getEnv("PORT", "8083")
+	port := getEnv("PORT", "9083")
 	redisAddr := getEnv("REDIS_ADDR", "localhost:6379")
 	redisPass := getEnv("REDIS_PASSWORD", "")
 	redisDB := 0
@@ -65,6 +65,8 @@ func main() {
 	))
 
 	r.Get("/dashboard", handler.MapDashboard)
+
+	r.Get("/info", locHandler.Info)
 
 		r.Route("/location", func(r chi.Router) {
 			r.Post("/", locHandler.UpdateLocation)

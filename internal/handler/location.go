@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -25,6 +26,9 @@ func writeJSON(w http.ResponseWriter, status int, v interface{}) {
 }
 
 func writeError(w http.ResponseWriter, status int, msg string) {
+	if status >= 500 {
+		log.Printf("[ERROR] %d %s", status, msg)
+	}
 	writeJSON(w, status, model.ErrorResponse{Error: msg, Code: status})
 }
 
@@ -226,6 +230,20 @@ func (h *LocationHandler) GetGpsStatus(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {object} map[string]string
 // @Failure 500 {object} model.ErrorResponse
 // @Router /location/{ref_id} [delete]
+func (h *LocationHandler) Info(w http.ResponseWriter, r *http.Request) {
+	totalEntities, gpsActive, gpsInactive, err := h.repo.GetInfo(r.Context())
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to get info")
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"service":        "location-service",
+		"total_entities": totalEntities,
+		"gps_active":     gpsActive,
+		"gps_inactive":   gpsInactive,
+	})
+}
+
 func (h *LocationHandler) RemoveEntity(w http.ResponseWriter, r *http.Request) {
 	refID := chi.URLParam(r, "ref_id")
 	if refID == "" {

@@ -1,15 +1,15 @@
 module github.com/Endea4/studExE4-location-service
 
-go 1.23
+go 1.25.0
 
 require (
+	github.com/Endea4/studExE4-shared v0.0.0-00010101000000-000000000000
 	github.com/go-chi/chi/v5 v5.2.1
 	github.com/go-chi/cors v1.2.1
 	github.com/joho/godotenv v1.5.1
 	github.com/redis/go-redis/v9 v9.7.3
 	github.com/swaggo/http-swagger/v2 v2.0.2
 	github.com/swaggo/swag v1.16.4
-	github.com/user/studexe4/shared v0.0.0
 )
 
 require (
@@ -55,4 +55,4 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
-replace github.com/user/studexe4/shared => ../../shared
+replace github.com/Endea4/studExE4-shared => ../studExE4-shared

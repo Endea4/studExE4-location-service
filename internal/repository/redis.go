@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/Endea4/studExE4-location-service/internal/model"
-	"github.com/user/studexe4/shared/events"
+	"github.com/Endea4/studExE4-shared/events"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -166,6 +166,35 @@ func (r *LocationRepository) GetGpsActive(ctx context.Context, refID string) (bo
 		return false, err
 	}
 	return val == "1", nil
+}
+
+func (r *LocationRepository) GetInfo(ctx context.Context) (totalEntities int64, gpsActive int64, gpsInactive int64, err error) {
+	totalEntities, err = r.rdb.ZCard(ctx, geoKey).Result()
+	if err != nil {
+		return
+	}
+
+	vals, err := r.rdb.ZRange(ctx, geoKey, 0, -1).Result()
+	if err != nil || len(vals) == 0 {
+		return
+	}
+
+	pipe := r.rdb.Pipeline()
+	cmds := make([]*redis.StringCmd, len(vals))
+	for i, refID := range vals {
+		cmds[i] = pipe.Get(ctx, fmt.Sprintf("entity:gps:%s", refID))
+	}
+	_, _ = pipe.Exec(ctx)
+
+	for _, cmd := range cmds {
+		val, _ := cmd.Result()
+		if val == "1" {
+			gpsActive++
+		} else {
+			gpsInactive++
+		}
+	}
+	return
 }
 
 func (r *LocationRepository) RemoveEntity(ctx context.Context, refID string) error {
